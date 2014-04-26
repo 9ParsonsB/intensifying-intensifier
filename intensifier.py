@@ -12,7 +12,7 @@ tempFolder = 'temp/'
 ################################################################################
 # Gets the dimensions of the input image
 def getDimensions(filename):
-  cmd = id + ' -format "%w:%h"' "%s"' % filename
+  cmd = id + ' -format "%%w:%%h" "%s"' % filename
   print("Getting image information...")
   output = subprocess.check_output(cmd, shell=True)
   res = str(output)[2:-1].split(':')
