@@ -8,7 +8,7 @@ A script that takes any image and makes a shaking GIF out of it, optionally with
 
 ## Requirements
 
-The script runs on [**Python 3**](http://www.python.org/getit/) (tested on 3.3.4) and requires [**ImageMagick**](http://www.imagemagick.org/script/index.php). It's also written for Windows, but could be quickly adapted to another OS.
+The script runs on [**Python 3**](http://www.python.org/getit/) (tested on 3.4) and requires [**ImageMagick**](http://www.imagemagick.org/script/index.php). It's also written for Windows, but could be quickly adapted to another OS.
 
 ## Usage
 
@@ -23,6 +23,10 @@ Once this variable is set, you can either run the script with **python intensifi
   * temporary frames aren't deleted after GIF is created
 
 ## Version History
+
+### 2014-04-26 - v2.1
+
+  * fixed a breaking bug
 
 ### 2014-04-19 - v2
 
