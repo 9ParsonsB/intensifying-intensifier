@@ -1,13 +1,20 @@
-import sys
-import random
-import os, subprocess
+import sys, random, os, subprocess
+from shutil import rmtree
+from tempfile import gettempdir
 
 ################################################################################
 # Configuration stuff
-imFolder = 'D:/files/4/programs/terminal-utilities/imagemagick/'
-im = imFolder + 'convert.exe'
-id = imFolder + 'identify.exe'
-tempFolder = 'temp/'
+if sys.platform == 'linux':
+  imFolder = '/usr/bin/'
+  im = imFolder + 'convert'
+  id = imFolder + 'identify'
+else:
+  imFolder = 'D:/files/4/programs/terminal-utilities/imagemagick/'
+  im = imFolder + 'convert.exe'
+  id = imFolder + 'identify.exe'
+
+tempFolder = os.path.join(gettempdir(), '.{}'.format(hash(os.times())))
+os.makedirs(tempFolder)
 
 ################################################################################
 # Gets the dimensions of the input image
@@ -22,13 +29,13 @@ def getDimensions(filename):
 
 ################################################################################
 # Generates shaken frames with optional subtitles
-def generateFrames(filename, shift, frames, w, h, longestEdge, doSubtitle, subtitleText):
+def generateFrames(filename, shift, frames, w, h, longestEdge, subtitle):
   wNew = w - (shift * 2) # size of resulting frame
   hNew = h - (shift * 2)
 
-  subtitleFront = '( -size %dx%d -background none -gravity center ' % (wNew, shift * 5)
-  subtitleFront += '-fill white -strokewidth 3 -font "Arial-Bold" -stroke '
-  subtitleBack = ' label:"%s" ) -gravity south -composite ' % subtitleText
+  subtitleFront = ' -size %dx%d -background none -gravity center ' % (wNew, shift * 5) +\
+                  '-fill white -strokewidth 3 -font "Arial-Bold" -stroke '
+  subtitleBack = ' label:"%s"  -gravity south -composite ' % subtitle
 
   print("Generating %d frames..." % frames)
   for i in range(frames):
@@ -36,11 +43,12 @@ def generateFrames(filename, shift, frames, w, h, longestEdge, doSubtitle, subti
     y = shift + random.randint(shift * -1, shift)
     cmd = im + ' "%s" ' % filename
     cmd += '-crop %dx%d+%d+%d ' % (wNew, hNew, x, y)
-    if doSubtitle:
+    if subtitle != '':
       cmd += subtitleFront + "black" + subtitleBack
       cmd += subtitleFront + "none" + subtitleBack
     cmd += '-resize "%dx%d>" ' % (longestEdge, longestEdge)
     cmd += '%s%03d.jpg' % (tempFolder, i)
+    #print("EXECUTE: " + cmd)
     os.system(cmd)
 
 ################################################################################
@@ -49,34 +57,41 @@ def animate(filename, colors, delay):
   cmd = im + ' -delay %.1f -loop 0 -dispose none -colors %d ' % (delay, colors)
   cmd += '-coalesce %s*.jpg "%s.gif"' % (tempFolder, filename)
   print("Animating...")
+  print("EXECUTE: " + cmd)
   os.system(cmd)
 
 ################################################################################
 # Main function, handles the other steps
-def shake(filename, shiftPercent=2, frames=5, doSubtitle=False, subtitleText="", delay=1.5, longestEdge=500, colors=192):
+def shake(filename, shiftPercent=2, frames=5, doSubtitle=False, subtitle="", delay=1.5, longestEdge=500, colors=192):
   w, h = getDimensions(filename)
   shiftPixels = round((w + h) / 2 * shiftPercent / 100)
   print('Maximum shift is %d pixels. (%.1f%%)' % (shiftPixels, shiftPercent))
-  generateFrames(filename, shiftPixels, frames, w, h, longestEdge, doSubtitle, subtitleText)
+  generateFrames(filename, shiftPixels, frames, w, h, longestEdge, subtitle)
   animate(filename, colors, delay)
   print('Done.')
-  os.system('"%s.gif"' % filename)
 
 ################################################################################
 # Handle user arguments
 def main():
   print()
+
+  subtitle = ''
+  out = 'intense'
+
   try:
     filename = sys.argv[1]
   except:
     filename = 'input.jpg'
 
-  if '-doSubtitle' in sys.argv:
-    print("What should the subtitle be?")
-    subtitle = input()
-    shake(filename, doSubtitle=True, subtitleText=subtitle)
-  else:
-    shake(filename)
+  if '-o' in sys.argv:
+    out = sys.argv[sys.argv.index('-o')+1]
+
+  if '-s' in sys.argv:
+    subtitle = sys.argv[sys.argv.index('-s')+1]
+
+
+  shake(filename, subtitle=subtitle)
+
 
 ################################################################################
 # Program entrypoint
